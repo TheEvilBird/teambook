@@ -1,49 +1,47 @@
 /**
  * Author: Alex Ponkratov
- * Date: ?
+ * Date: 2024-04
  * Description: Similar to the Edmonds-Karp.
  * Time: O(VE + FE \log(V))
  */
 
-struct MinCostMaxFlow {
+struct MinCost {
   struct Edge {
+    int from, to;
     ll flow, cap, price;
-    int to, id;
+    int rev_id;
 
     Edge() {}
-
-    Edge(ll flow, ll cap, ll price, int to, int id)
-        : flow(flow), cap(cap), price(price), to(to), id(id) {}
+    Edge(int from, int to, ll flow, ll cap, ll price, int revId) 
+          : from(from), to(to), flow(flow), cap(cap), price(price), rev_id(revId) {}
   };
 
   int n;
+  vector<vector<int>> g;
+  int ptr = 0;
+  vector<Edge> edges;
+  vector<int> dist, add_flow;
+  vector<pair<int, int>> par;
   int s, t;
-  ll ans;
-  vector<vector<Edge>> g;
-  vector<int> d;
-  vector<ll> add_f;
-  vector<pii> par;
 
-  MinCostMaxFlow() {}
-
-  MinCostMaxFlow(int _n) {
-    n = _n;
-    g.resize(n);
-  }
+  MinCost(int n) : n(n), g(n), dist(n), add_flow(n), par(n) {}
 
   void add_edge(int from, int to, ll cap, ll price) {
-    g[from].emplace_back(0, cap, price, to, sz(g[to]));
-    g[to].emplace_back(0, 0, -price, from, sz(g[from]) - 1);
+    edges.emplace_back(from, to, 0, cap, price, ptr ^ 1);
+    g[from].emplace_back(ptr);
+    ++ptr;
+
+    edges.emplace_back(to, from, 0, 0, -price, ptr ^ 1);
+    g[to].emplace_back(ptr);
+    ++ptr;
   }
 
-  ll get_edge_flow(int v, int id) { return g[v][id].flow; }
-
   void FB() {
-    d.assign(n, INF);
-    add_f.assign(n, 0);
+    dist.assign(n, INF);
+    add_flow.assign(n, 0);
     par.assign(n, {-1, -1});
-    d[s] = 0;
-    add_f[0] = INF;
+    dist[s] = 0;
+    add_flow[0] = INF;
     queue<int> q;
     q.push(s);
     vector<int> used(n, 0);
@@ -53,10 +51,10 @@ struct MinCostMaxFlow {
       q.pop();
       used[v] = 0;
       for (int i = 0; i < sz(g[v]); ++i) {
-        auto &e = g[v][i];
-        if (e.flow < e.cap && d[e.to] > d[v] + e.price) {
-          d[e.to] = d[v] + e.price;
-          add_f[e.to] = min(add_f[v], e.cap - e.flow);
+        auto &e = edges[g[v][i]];
+        if (e.flow < e.cap && dist[e.to] > dist[v] + e.price) {
+          dist[e.to] = dist[v] + e.price;
+          add_flow[e.to] = min(add_flow[v], (int) (e.cap - e.flow));
           par[e.to] = {v, i};
           if (!used[e.to]) {
             q.push(e.to);
@@ -67,28 +65,29 @@ struct MinCostMaxFlow {
     }
   }
 
-  void push_flow(ll flow) {
+  void push_flow(ll flow, ll &ans) {
     int cur = t;
     while (cur != s) {
       int prev = par[cur].first, id = par[cur].second;
-      g[prev][id].flow += flow;
-      g[cur][g[prev][id].id].flow -= flow;
-      ans += g[prev][id].price * flow;
+      auto &e = edges[g[prev][id]];
+      e.flow += flow;
+      edges[e.rev_id].flow -= flow;
+      ans += e.price * flow;
       cur = prev;
     }
   }
 
   ll min_cost_max_flow(int _s, int _t) {
-    ans = 0;
     s = _s;
     t = _t;
+    ll ans = 0;
     while (true) {
       FB();
-      ll flow = add_f[t];
+      ll flow = add_flow[t];
       if (flow == 0) {
         break;
       }
-      push_flow(flow);
+      push_flow(flow, ans);
     }
     return ans;
   }

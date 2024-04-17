@@ -1,6 +1,6 @@
 /**
  * Author: Alex Ponkratov
- * Date: ?
+ * Date: 2024-04
  * Description: Dinic's algorithm
  * Time: O(V^{2}E)
  */
@@ -12,8 +12,8 @@ struct Dinic {
     int rev_id;
 
     Edge() {}
-    Edge(int from, int to, ll flow, ll cap, int rev_id) : from(from), to(to), flow(flow), cap(cap),
-                                                          rev_id(rev_id) {}
+    Edge(int from, int to, ll flow, ll cap, int rev_id) 
+          : from(from), to(to), flow(flow), cap(cap), rev_id(rev_id) {}
   };
 
   int n;
