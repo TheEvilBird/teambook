@@ -45,8 +45,8 @@ ld from_polygon_to_polygon(Polygon a, Polygon b) {
   int n = sz(c);
   Point p(0, 0);
   ld ans = 1e20;
-  for (int i = 0; i < n - 1; ++i) {
-    ans = min(ans, from_point_to_segment(p, c[i], c[i + 1]));
+  for (int i = 0; i < n; ++i) {
+    ans = min(ans, from_point_to_segment(p, c[i], c[(i + 1) % n]));
   }
   return ans;
 }
